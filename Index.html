@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;font-size:14px}
+input,select,button{font-family:inherit}
+
+/* ── TELAS ── */
+.tela{display:none;min-height:100vh}
+.tela.ativa{display:block}
+#tela-login,#tela-senha{display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+#tela-login.ativa,#tela-senha.ativa{display:flex}
+
+/* ── CARD AUTH ── */
+.auth{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px;width:100%;max-width:360px}
+.auth-ico{width:48px;height:48px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 14px}
+.auth-title{font-size:20px;font-weight:800;color:#f1f5f9;text-align:center;margin-bottom:4px}
+.auth-sub{font-size:13px;color:#64748b;text-align:center;margin-bottom:22px}
+.err{color:#f87171;font-size:12px;text-align:center;margin-top:10px;min-height:18px}
+
+/* ── INPUTS ── */
+.lbl{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px}
+.inp{width:100%;background:#162032;border:1.5px solid #334155;border-radius:8px;padding:9px 11px;color:#e2e8f0;font-size:14px;outline:none}
+.inp:focus{border-color:#2563eb}
+.inp-wrap{position:relative;margin-bottom:14px}
+.inp-wrap .inp{padding-right:38px}
+.eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:#475569;line-height:1}
+.fld{margin-bottom:14px}
+
+/* ── BOTÕES ── */
+.btn{border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;padding:10px 16px;width:100%}
+.btn-blue{background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff}
+.btn-green{background:#16a34a;color:#fff}
+.btn-red{background:#ef4444;color:#fff}
+.btn-gray{background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.btn-sm{padding:6px 12px;font-size:12px;width:auto}
+.btn:disabled{opacity:.6;cursor:default}
+
+/* ── APP LAYOUT ── */
+#tela-app{display:none}
+#tela-app.ativa{display:block}
+
+/* Topbar */
+.topbar{background:#0f172a;border-bottom:1px solid #1e293b;padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.topbar-title{font-size:15px;font-weight:800;color:#f1f5f9;flex:1;min-width:100px}
+
+/* Bottom nav (mobile) */
+.botnav{position:fixed;bottom:0;left:0;right:0;background:#0f172a;border-top:1px solid #1e293b;display:flex;z-index:100}
+.botnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;cursor:pointer;color:#475569;font-size:9px;gap:3px;border:none;background:none}
+.botnav-item.ativo{color:#60a5fa}
+.botnav-item svg{width:20px;height:20px}
+
+/* Conteúdo */
+.pg{padding:14px;padding-bottom:80px}
+
+/* ── CARDS ── */
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;margin-bottom:12px}
+.card-hd{padding:10px 14px;border-bottom:1px solid #273344;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:14px}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.kpi{border-radius:12px;padding:12px;border:1px solid}
+.kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.kpi-val{font-size:17px;font-weight:800;margin-top:5px}
+.kpi-sub{font-size:10px;margin-top:3px;opacity:.7}
+
+/* Tabela */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#162032;color:#475569;font-size:10px;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #273344;font-weight:700;text-align:left;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid #1e293b;color:#cbd5e1;vertical-align:middle}
+tr:last-child td{border:none}
+tr:hover td{background:#162032}
+.tag{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:600;display:inline-block}
+.act{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:5px;font-size:14px;color:#475569}
+.act:hover{background:#273344}
+
+/* Barra */
+.bar-bg{height:4px;background:#273344;border-radius:99px;overflow:hidden;margin-top:4px}
+.bar-fill{height:100%;border-radius:99px}
+
+/* ── MODAL ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end;justify-content:center}
+.ov.open{display:flex}
+.modal{background:#1e293b;border:1px solid #334155;border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+@media(min-width:600px){
+  .ov{align-items:center}
+  .modal{border-radius:16px;max-height:85vh}
+}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-title{font-size:15px;font-weight:700;color:#f1f5f9}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:#475569;line-height:1}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chk-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#94a3b8;cursor:pointer;padding:4px 0}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;border:1px solid #334155;color:#e2e8f0;padding:10px 18px;border-radius:99px;font-size:13px;z-index:999;opacity:0;transition:.3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Spin */
+.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* User chip no topo do app */
+.userchip{display:flex;align-items:center;gap:8px;padding:6px 14px;background:#0f172a;border-bottom:1px solid #1e293b}
+.uav{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.badge-adm{background:#312e81;color:#a5b4fc;font-size:10px;padding:1px 7px;border-radius:99px;font-weight:700}
+.badge-usr{background:#1e293b;color:#64748b;font-size:10px;padding:1px 7px;border-radius:99px;border:1px solid #334155}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="tela-login" class="tela">
+  <div class="auth">
+    <div class="auth-ico">📊</div>
+    <div class="auth-title">MeuFluxo</div>
+    <div class="auth-sub">Controle financeiro pessoal</div>
+    <div class="fld"><label class="lbl">Usuário</label>
+      <input class="inp" id="l-u" placeholder="Nome de usuário" autocomplete="username" onkeydown="if(event.key==='Enter')login()"/></div>
+    <div class="fld"><label class="lbl">Senha</label>
+      <div class="inp-wrap"><input class="inp" id="l-p" type="password" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"/>
+        <button class="eye" onclick="togglePw('l-p',this)">👁</button></div></div>
+    <button class="btn btn-blue" onclick="login()">Entrar</button>
+    <div class="err" id="l-err"></div>
+  </div>
+</div>
+
+<!-- ═══ TROCA DE SENHA ═══ -->
+<div id="tela-senha" class="tela">
+  <div class="auth">
+    <div class="auth-ico">🔐</div>
+    <div class="auth-title">Primeiro acesso</div>
+    <div class="auth-sub">Defina uma nova senha para continuar.</div>
+    <div class="fld"><label class="lbl">Nova senha</label>
+      <div class="inp-wrap"><input class="inp" id="ns-n" type="password" placeholder="Mínimo 6 caracteres"/>
+        <button class="eye" onclick="togglePw('ns-n',this)">👁</button></div></div>
+    <div class="fld"><label class="lbl">Confirmar senha</label>
+      <div class="inp-wrap"><input class="inp" id="ns-c" type="password" placeholder="Repita a nova senha"/>
+        <button class="eye" onclick="togglePw('ns-c',this)">👁</button></div></div>
+    <button class="btn btn-blue" onclick="trocarSenha()">Salvar nova senha</button>
+    <div class="err" id="ns-err"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="tela-app" class="tela">
+
+  <!-- Chip do usuário -->
+  <div class="userchip">
+    <div class="uav" id="ap-av">?</div>
+    <span id="ap-nome" style="font-size:13px;font-weight:600;color:#e2e8f0;flex:1"></span>
+    <span id="ap-role"></span>
+    <button class="btn btn-gray btn-sm" onclick="alterarSenhaModal()" style="margin-left:4px">🔑</button>
+    <button class="btn btn-gray btn-sm" onclick="logout()" style="margin-left:4px">Sair</button>
+  </div>
+
+  <!-- Topbar com mês -->
+  <div class="topbar">
+    <button class="btn btn-gray btn-sm" onclick="mudaMes(-1)" style="padding:6px 10px">‹</button>
+    <select id="sel-mes" class="inp" style="flex:1;padding:6px 8px;font-size:13px" onchange="trocarMes()"></select>
+    <button class="btn btn-gray btn-sm" onclick="mudaMes(1)" style="padding:6px 10px">›</button>
+    <button class="btn btn-gray btn-sm" onclick="copiarRec()" style="padding:6px 10px" title="Copiar recorrentes">⧉</button>
+  </div>
+
+  <!-- Conteúdo das páginas -->
+  <div class="pg">
+
+    <!-- DASHBOARD -->
+    <div id="pg-dash">
+      <div class="kpis" id="kpis"></div>
+      <div class="card">
+        <div class="card-hd">💸 Despesas por categoria</div>
+        <div class="card-body"><canvas id="ch-cat" height="180"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">🎯 Saúde financeira</div>
+        <div class="card-body" id="saude-panel"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">🔔 Alertas</div>
+        <div class="card-body" id="alertas-panel"></div>
+      </div>
+    </div>
+
+    <!-- RECEITAS -->
+    <div id="pg-rec" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800;color:#f1f5f9">Receitas</div>
+        <button class="btn btn-green btn-sm" onclick="abrirItem('receita',null)">+ Nova</button>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span>Lançamentos</span><span id="tot-rec" style="color:#4ade80;font-size:13px;font-weight:700;text-transform:none"></span></div>
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Descrição</th><th>Categoria</th><th>Data</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+          <tbody id="tb-rec"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESPESAS -->
+    <div id="pg-desp" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800;color:#f1f5f9">Despesas</div>
+        <button class="btn btn-red btn-sm" onclick="abrirItem('despesa',null)">+ Nova</button>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span>Lançamentos</span><span id="tot-desp" style="color:#f87171;font-size:13px;font-weight:700;text-transform:none"></span></div>
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Descrição</th><th>Categoria</th><th>Data</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+          <tbody id="tb-desp"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div id="pg-graf" style="display:none">
+      <div style="font-size:16px;font-weight:800;color:#f1f5f9;margin-bottom:12px">Análise Visual</div>
+      <div class="card"><div class="card-hd">🍩 Categorias</div>
+        <div class="card-body"><canvas id="ch-donut" height="200"></canvas></div></div>
+      <div class="card"><div class="card-hd">📊 Resumo</div>
+        <div class="card-body"><canvas id="ch-res" height="180"></canvas></div></div>
+      <div class="card"><div class="card-hd">📋 Detalhe</div>
+        <div class="card-body" id="det-cat"></div></div>
+    </div>
+
+    <!-- SIMULADOR -->
+    <div id="pg-sim" style="display:none">
+      <div style="font-size:16px;font-weight:800;color:#f1f5f9;margin-bottom:12px">Simulador</div>
+      <div class="card"><div class="card-hd">⚙️ Parâmetros</div>
+        <div class="card-body">
+          <div class="fld"><label class="lbl">Aporte mensal: <span id="sv-ap">R$ 500</span></label>
+            <input type="range" class="inp" style="padding:4px 0" min="50" max="5000" step="50" value="500" id="s-ap" oninput="sim()"/></div>
+          <div class="fld"><label class="lbl">Período: <span id="sv-an">10 anos</span></label>
+            <input type="range" class="inp" style="padding:4px 0" min="1" max="30" step="1" value="10" id="s-an" oninput="sim()"/></div>
+          <div class="fld"><label class="lbl">Taxa anual: <span id="sv-tx">12%</span></label>
+            <input type="range" class="inp" style="padding:4px 0" min="4" max="20" step="0.5" value="12" id="s-tx" oninput="sim()"/></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div style="background:#0d2518;border:1px solid #166534;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:9px;color:#4ade80;font-weight:700;text-transform:uppercase">Investido</div>
+              <div id="sv-inv" style="font-size:14px;font-weight:800;color:#4ade80;margin-top:2px">—</div></div>
+            <div style="background:#0c1a3a;border:1px solid #1e3a8a;border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:9px;color:#60a5fa;font-weight:700;text-transform:uppercase">Patrimônio</div>
+              <div id="sv-fin" style="font-size:14px;font-weight:800;color:#60a5fa;margin-top:2px">—</div></div>
+          </div>
+          <div id="sv-rend" style="background:#1c1408;border:1px solid #713f12;border-radius:8px;padding:8px;font-size:12px;color:#fcd34d;text-align:center"></div>
+        </div></div>
+      <div class="card"><div class="card-hd">📈 Evolução</div>
+        <div class="card-body"><canvas id="ch-sim" height="220"></canvas></div></div>
+      <div id="sim-cards" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px"></div>
+    </div>
+
+    <!-- MAIS (exportar + admin + IA) -->
+    <div id="pg-mais" style="display:none">
+      <div style="font-size:16px;font-weight:800;color:#f1f5f9;margin-bottom:12px">Mais opções</div>
+
+      <!-- IA -->
+      <div class="card"><div class="card-hd">✨ IA Financeira</div>
+        <div class="card-body">
+          <button class="btn btn-blue" onclick="askIA()" id="btn-ia">✨ Analisar com IA</button>
+          <div id="ia-resp" style="margin-top:12px;line-height:1.8;font-size:13px;color:#cbd5e1;white-space:pre-wrap;display:none"></div>
+        </div></div>
+
+      <!-- Exportar -->
+      <div class="card"><div class="card-hd">📊 Exportar</div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+          <div class="fld" style="margin:0"><label class="lbl">Mês do relatório</label>
+            <select id="exp-sel" class="inp" style="padding:7px 10px"></select></div>
+          <button class="btn btn-green" onclick="expExcel()">📥 Baixar Excel (.xlsx)</button>
+          <button class="btn btn-gray" onclick="expHTML()">📄 Baixar HTML</button>
+          <div style="display:flex;gap:8px">
+            <input class="inp" id="wpp" placeholder="DDD+número WhatsApp" style="flex:1;padding:8px"/>
+            <button class="btn btn-sm" style="background:#25d366;color:#fff;border:none;white-space:nowrap" onclick="envWpp()">WhatsApp</button>
+          </div>
+        </div></div>
+
+      <!-- Admin -->
+      <div id="bloco-admin" style="display:none" class="card"><div class="card-hd">👥 Usuários
+          <button class="btn btn-blue btn-sm" onclick="abrirNovoUser()">+ Novo</button></div>
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Usuário</th><th>Perfil</th><th>Senha</th><th></th></tr></thead>
+          <tbody id="tb-users"></tbody></table>
+        </div></div>
+    </div>
+
+  </div><!-- /pg -->
+
+  <!-- Bottom nav -->
+  <nav class="botnav">
+    <button class="botnav-item ativo" data-pg="dash" onclick="irPara('dash',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Início</button>
+    <button class="botnav-item" data-pg="rec" onclick="irPara('rec',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Receitas</button>
+    <button class="botnav-item" data-pg="desp" onclick="irPara('desp',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Despesas</button>
+    <button class="botnav-item" data-pg="graf" onclick="irPara('graf',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Gráficos</button>
+    <button class="botnav-item" data-pg="sim" onclick="irPara('sim',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>Simular</button>
+    <button class="botnav-item" data-pg="mais" onclick="irPara('mais',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>Mais</button>
+  </nav>
+</div><!-- /tela-app -->
+
+<!-- ═══ MODAIS ═══ -->
+<!-- Lançamento -->
+<div class="ov" id="ov-item">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title" id="m-title"></span><button class="modal-close" onclick="fecharOv('ov-item')">×</button></div>
+    <div id="m-body"></div>
+  </div>
+</div>
+
+<!-- Confirmação -->
+<div class="ov" id="ov-conf">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-hd"><span class="modal-title" style="color:#f87171">⚠️ Confirmar</span><button class="modal-close" onclick="fecharOv('ov-conf')">×</button></div>
+    <p style="color:#94a3b8;font-size:13px;margin-bottom:18px" id="conf-msg"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-gray btn-sm" onclick="fecharOv('ov-conf')">Cancelar</button>
+      <button class="btn btn-red btn-sm" id="conf-ok">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Alterar senha (in-app) -->
+<div class="ov" id="ov-pw">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-hd"><span class="modal-title">🔑 Alterar senha</span><button class="modal-close" onclick="fecharOv('ov-pw')">×</button></div>
+    <div class="fld"><label class="lbl">Senha atual</label>
+      <div class="inp-wrap"><input class="inp" id="pw-a" type="password" placeholder="Senha atual"/><button class="eye" onclick="togglePw('pw-a',this)">👁</button></div></div>
+    <div class="fld"><label class="lbl">Nova senha</label>
+      <div class="inp-wrap"><input class="inp" id="pw-n" type="password" placeholder="Mínimo 6 caracteres"/><button class="eye" onclick="togglePw('pw-n',this)">👁</button></div></div>
+    <div class="fld"><label class="lbl">Confirmar</label>
+      <div class="inp-wrap"><input class="inp" id="pw-c" type="password" placeholder="Repita a nova senha"/><button class="eye" onclick="togglePw('pw-c',this)">👁</button></div></div>
+    <div class="err" id="pw-err"></div>
+    <button class="btn btn-blue" onclick="salvarSenha()">Salvar</button>
+  </div>
+</div>
+
+<!-- Novo usuário -->
+<div class="ov" id="ov-user">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-hd"><span class="modal-title">Novo usuário</span><button class="modal-close" onclick="fecharOv('ov-user')">×</button></div>
+    <div class="fld"><label class="lbl">Login (sem espaços)</label><input class="inp" id="nu-l" placeholder="Ex: maria"/></div>
+    <div class="fld"><label class="lbl">Nome completo</label><input class="inp" id="nu-n" placeholder="Ex: Maria Silva"/></div>
+    <div style="background:#0c1a3a;border:1px solid #1e3a8a;border-radius:8px;padding:10px;font-size:12px;color:#93c5fd;margin-bottom:14px">
+      🔑 Senha inicial será <strong>123456</strong>. O usuário deverá alterá-la no primeiro acesso.
+    </div>
+    <div class="err" id="nu-err"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-gray btn-sm" onclick="fecharOv('ov-user')">Cancelar</button>
+      <button class="btn btn-blue btn-sm" onclick="salvarUser()">Criar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ── CONSTANTES ──────────────────────────────────────────────
+const CATS_D=["Alimentação","Mercado","Delivery","Combustível","Aluguel","Luz","Água","Internet","Lazer","Cartão","Saúde","Educação","Outros"];
+const CATS_R=["Salário","Freela","Extra","Aluguel recebido","Aposentadoria","Vendas","Outros"];
+const COR=["#3b82f6","#10b981","#f59e0b","#8b5cf6","#ef4444","#06b6d4","#84cc16","#f97316","#ec4899","#14b8a6","#6366f1","#a855f7","#64748b"];
+const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const BRL=v=>"R$ "+Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+// ── ESTADO ──────────────────────────────────────────────────
+let USERS={}, FIN={}, CFG={};
+let EU=null, mesAtual="", pgAtual="dash";
+let eType=null, eId=null;
+let CHS={};
+
+// ── STORAGE (localStorage — funciona no GitHub Pages e Windows) ──
+const S={
+  async g(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}},
+  async s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+const saveU=()=>S.s('mf6-u',USERS);
+const saveF=()=>S.s('mf6-f',FIN);
+
+// ── HASH ────────────────────────────────────────────────────
+async function H(pw){
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+// ── HELPERS ─────────────────────────────────────────────────
+const gkey=(y,m)=>`${y}-${String(m+1).padStart(2,'0')}`;
+const mlbl=k=>{const[y,m]=k.split('-').map(Number);return`${MESES[m-1]} ${y}`;};
+const ini=n=>(n||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const catMap=arr=>{const m={};arr.forEach(d=>{m[d.categoria]=(m[d.categoria]||0)+d.valor;});return m;};
+function getMon(k){if(!FIN[EU.u])FIN[EU.u]={};return FIN[EU.u][k]||{receitas:[],despesas:[]};}
+function setMon(k,d){if(!FIN[EU.u])FIN[EU.u]={};FIN[EU.u][k]=d;}
+function saude(tR,tD,sl,desp){
+  if(!tR)return 0;
+  const s1=Math.min(35,(sl/tR)*70);
+  const c=desp.filter(d=>d.categoria==='Cartão').reduce((a,x)=>a+x.valor,0);
+  const s2=Math.max(0,35-Math.min(35,(c/tR)*70));
+  const s3=Math.min(30,Math.max(0,30-(tD/tR-.7)*50));
+  return Math.round(s1+s2+s3);
+}
+
+function toast(msg,ok=true){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.style.background=ok?'#1e293b':'#1f1315';
+  el.style.color=ok?'#e2e8f0':'#fca5a5';el.style.borderColor=ok?'#334155':'#7f1d1d';
+  el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);
+}
+function err(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;}}
+function togglePw(id,btn){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='text'?'🙈':'👁';}
+function abrirOv(id){document.getElementById(id).classList.add('open');}
+function fecharOv(id){document.getElementById(id).classList.remove('open');}
+function dc(id){if(CHS[id]){CHS[id].destroy();delete CHS[id];}}
+function dkopts(sc=false,leg=false){
+  return{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:leg?{labels:{color:'#64748b',font:{size:10},boxWidth:10}}:{display:false},
+      tooltip:{callbacks:{label:c=>BRL(c.raw)}}},
+    ...(sc?{scales:{x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'#1e293b'}},y:{ticks:{color:'#475569',font:{size:10},callback:v=>'R$'+Math.round(v/1000)+'k'},grid:{color:'#1e293b'}}}}:{})};
+}
+
+// ── TELAS ───────────────────────────────────────────────────
+function tela(id){
+  ['tela-login','tela-senha','tela-app'].forEach(t=>{
+    const el=document.getElementById(t);
+    el.classList.remove('ativa');
+    el.style.display='none';
+  });
+  const el=document.getElementById(id);
+  if(id==='tela-app'){el.style.display='block';}
+  else{el.style.display='flex';}
+  el.classList.add('ativa');
+}
+
+// ── AUTH ────────────────────────────────────────────────────
+async function login(){
+  const u=(document.getElementById('l-u').value||'').trim().toLowerCase();
+  const p=document.getElementById('l-p').value||'';
+  err('l-err','');
+  if(!u||!p){err('l-err','Preencha usuário e senha.');return;}
+  const usr=USERS[u];
+  if(!usr){err('l-err','Usuário não encontrado.');return;}
+  if(await H(p)!==usr.hash){err('l-err','Senha incorreta.');return;}
+  EU={u,nome:usr.nome,role:usr.role};
+  if(usr.mustChange){tela('tela-senha');return;}
+  entrarApp();
+}
+
+async function trocarSenha(){
+  const n=document.getElementById('ns-n').value||'';
+  const c=document.getElementById('ns-c').value||'';
+  err('ns-err','');
+  if(n.length<6){err('ns-err','Mínimo 6 caracteres.');return;}
+  if(n==='123456'){err('ns-err','Não use a senha padrão.');return;}
+  if(n!==c){err('ns-err','Senhas não coincidem.');return;}
+  USERS[EU.u].hash=await H(n);USERS[EU.u].mustChange=false;
+  await saveU();toast('Senha definida! Bem-vindo(a)!');entrarApp();
+}
+
+function entrarApp(){
+  const u=USERS[EU.u];
+  const av=document.getElementById('ap-av');
+  av.textContent=ini(u.nome||EU.u);
+  av.style.background=EU.role==='admin'?'#312e81':'#1e293b';
+  av.style.color=EU.role==='admin'?'#a5b4fc':'#60a5fa';
+  av.style.border=EU.role==='admin'?'1px solid #4338ca':'1px solid #334155';
+  document.getElementById('ap-nome').textContent=u.nome||EU.u;
+  document.getElementById('ap-role').innerHTML=EU.role==='admin'?'<span class="badge-adm">Admin</span>':'<span class="badge-usr">Usuário</span>';
+  document.getElementById('bloco-admin').style.display=EU.role==='admin'?'block':'none';
+  const now=new Date();
+  mesAtual=gkey(now.getFullYear(),now.getMonth());
+  buildSel('sel-mes');buildSel('exp-sel');
+  tela('tela-app');
+  irPara('dash',document.querySelector('.botnav-item'));
+}
+
+function logout(){
+  EU=null;
+  document.getElementById('l-u').value='';
+  document.getElementById('l-p').value='';
+  err('l-err','');
+  tela('tela-login');
+}
+
+// ── NAV ─────────────────────────────────────────────────────
+function irPara(pg,btn){
+  pgAtual=pg;
+  ['dash','rec','desp','graf','sim','mais'].forEach(p=>{
+    const el=document.getElementById('pg-'+p);
+    if(el)el.style.display=p===pg?'block':'none';
+  });
+  document.querySelectorAll('.botnav-item').forEach(b=>b.classList.remove('ativo'));
+  if(btn)btn.classList.add('ativo');
+  if(pg==='mais'){buildSel('exp-sel');renderUsers();}
+  render();
+}
+
+// ── MÊS ─────────────────────────────────────────────────────
+function buildSel(id){
+  const el=document.getElementById(id);if(!el)return;
+  const v=el.value||mesAtual;el.innerHTML='';
+  const now=new Date();
+  for(let i=-6;i<=6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    const k=gkey(d.getFullYear(),d.getMonth());
+    const o=document.createElement('option');
+    o.value=k;o.textContent=`${MESES[d.getMonth()]} ${d.getFullYear()}`;
+    if(k===v)o.selected=true;
+    el.appendChild(o);
+  }
+}
+function trocarMes(){mesAtual=document.getElementById('sel-mes').value;render();}
+function mudaMes(d){
+  const[y,m]=mesAtual.split('-').map(Number);
+  const nd=new Date(y,m-1+d,1);
+  mesAtual=gkey(nd.getFullYear(),nd.getMonth());
+  buildSel('sel-mes');buildSel('exp-sel');render();
+}
+function copiarRec(){
+  const[y,m]=mesAtual.split('-').map(Number);
+  const pk=gkey(...[new Date(y,m-2,1)].map(d=>[d.getFullYear(),d.getMonth()]).flat());
+  if(!FIN[EU.u])FIN[EU.u]={};
+  const prev=FIN[EU.u][pk]||{receitas:[],despesas:[]};
+  const rr=prev.receitas.filter(r=>r.rec);
+  const rd=prev.despesas.filter(d=>d.rec);
+  if(!rr.length&&!rd.length){toast('Sem recorrentes no mês anterior.',false);return;}
+  const cur=getMon(mesAtual);
+  rr.forEach(r=>cur.receitas.push({...r,id:uid()}));
+  rd.forEach(d=>cur.despesas.push({...d,id:uid()}));
+  setMon(mesAtual,cur);saveF();render();
+  toast(`${rr.length+rd.length} lançamentos copiados!`);
+}
+
+// ── RENDER ──────────────────────────────────────────────────
+function render(){
+  if(!EU)return;
+  const mon=getMon(mesAtual);
+  const tR=mon.receitas.reduce((a,x)=>a+x.valor,0);
+  const tD=mon.despesas.reduce((a,x)=>a+x.valor,0);
+  const sl=tR-tD;
+  if(pgAtual==='dash') rDash(mon,tR,tD,sl);
+  if(pgAtual==='rec')  rRec(mon,tR);
+  if(pgAtual==='desp') rDesp(mon,tD);
+  if(pgAtual==='graf') rGraf(mon,tR,tD);
+  if(pgAtual==='sim')  sim();
+}
+
+// ── DASHBOARD ───────────────────────────────────────────────
+function rDash(mon,tR,tD,sl){
+  const inv=Math.max(0,sl*.3);
+  const h=saude(tR,tD,sl,mon.despesas);
+  const hc=h>=70?'#4ade80':h>=45?'#fbbf24':'#f87171';
+  const hl=h>=70?'Saudável':h>=45?'Atenção':'Crítico';
+  document.getElementById('kpis').innerHTML=[
+    {l:'Receitas',v:BRL(tR),c:'#4ade80',bg:'#0d2518',bc:'#166534'},
+    {l:'Despesas',v:BRL(tD),c:'#f87171',bg:'#1f1315',bc:'#7f1d1d'},
+    {l:'Saldo',v:BRL(sl),c:sl>=0?'#60a5fa':'#f87171',bg:sl>=0?'#0c1a3a':'#1f1315',bc:sl>=0?'#1e3a8a':'#7f1d1d'},
+    {l:'Investível',v:BRL(inv),c:'#fbbf24',bg:'#1c1408',bc:'#713f12'},
+  ].map(k=>`<div class="kpi" style="background:${k.bg};border-color:${k.bc}"><div class="kpi-lbl" style="color:${k.c}">${k.l}</div><div class="kpi-val" style="color:${k.c}">${k.v}</div></div>`).join('');
+
+  const cm=catMap(mon.despesas);
+  const ca=Object.entries(cm).sort((a,b)=>b[1]-a[1]);
+  dc('ch-cat');
+  if(ca.length)CHS['ch-cat']=new Chart(document.getElementById('ch-cat'),{
+    type:'bar',
+    data:{labels:ca.map(x=>x[0]),datasets:[{data:ca.map(x=>x[1]),backgroundColor:COR.map(c=>c+'cc'),borderColor:COR,borderWidth:1,borderRadius:5,borderSkipped:false}]},
+    options:dkopts(true)
+  });
+
+  document.getElementById('saude-panel').innerHTML=`
+    <div style="text-align:center;margin-bottom:12px">
+      <svg viewBox="0 0 100 60" width="120" style="display:block;margin:0 auto;overflow:visible">
+        <path d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="#273344" stroke-width="10" stroke-linecap="round"/>
+        <path d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="${hc}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${h*1.26} 126"/>
+        <text x="50" y="52" text-anchor="middle" font-size="16" font-weight="800" fill="${hc}">${h}</text>
+      </svg>
+      <div style="font-size:12px;font-weight:700;color:${hc};text-transform:uppercase;margin-top:4px">${hl}</div>
+    </div>
+    ${brow('Saldo/Receita',Math.min(100,tR>0?Math.round(sl/tR*100):0),hc)}
+    ${brow('Controle gastos',Math.min(100,tR>0?Math.round(100-Math.min(100,tD/tR*100)):0),'#60a5fa')}
+    ${brow('Investível',Math.min(100,tR>0?Math.round(inv/tR*200):0),'#fbbf24')}`;
+
+  const tips=[];
+  const del=mon.despesas.filter(d=>d.categoria==='Delivery').reduce((a,x)=>a+x.valor,0);
+  if(tD>0&&del/tD>.12)tips.push(`📦 Delivery alto (${BRL(del)}): ${(del/tD*100).toFixed(0)}% das despesas.`);
+  if(inv>0)tips.push(`💰 Potencial de investimento: ${BRL(inv)}/mês`);
+  if(sl<0)tips.push(`🚨 Déficit: despesas superam receitas em ${BRL(Math.abs(sl))}`);
+  document.getElementById('alertas-panel').innerHTML=tips.length
+    ?tips.map(t=>`<div style="padding:8px 0;border-bottom:1px solid #1e293b;font-size:13px;color:#cbd5e1">${t}</div>`).join('')
+    :'<p style="color:#334155;text-align:center;padding:8px">Nenhum alerta 🎉</p>';
+}
+function brow(l,p,c){return`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:#64748b">${l}</span><span style="font-size:11px;font-weight:700;color:${c}">${p}%</span></div><div class="bar-bg"><div class="bar-fill" style="width:${p}%;background:${c}"></div></div></div>`;}
+
+// ── RECEITAS ────────────────────────────────────────────────
+function rRec(mon,tR){
+  document.getElementById('tot-rec').textContent=BRL(tR);
+  document.getElementById('tb-rec').innerHTML=mon.receitas.length
+    ?mon.receitas.map(r=>`<tr>
+      <td>${r.desc||'—'}<br><small style="color:#475569">${r.rec?'🔄 Recorrente':''}</small></td>
+      <td><span class="tag" style="background:#0d2518;color:#4ade80">${r.categoria}</span></td>
+      <td style="color:#64748b;white-space:nowrap">${r.data}</td>
+      <td style="text-align:right;font-weight:700;color:#4ade80;white-space:nowrap">${BRL(r.valor)}</td>
+      <td style="white-space:nowrap">
+        <button class="act" onclick="abrirItem('receita','${r.id}')">✏️</button>
+        <button class="act" onclick="delItem('receita','${r.id}')">🗑️</button>
+      </td></tr>`).join('')
+    :'<tr><td colspan="5" style="text-align:center;color:#334155;padding:20px">Nenhuma receita lançada.</td></tr>';
+}
+
+// ── DESPESAS ────────────────────────────────────────────────
+function rDesp(mon,tD){
+  document.getElementById('tot-desp').textContent=BRL(tD);
+  document.getElementById('tb-desp').innerHTML=mon.despesas.length
+    ?mon.despesas.map(d=>`<tr>
+      <td>${d.desc||'—'}<br><small style="color:#475569">${[d.rec?'🔄':'',d.parc?'📋 Parc.':''].filter(Boolean).join(' ')}</small></td>
+      <td><span class="tag" style="background:#1f1315;color:#f87171">${d.categoria}</span></td>
+      <td style="color:#64748b;white-space:nowrap">${d.data}</td>
+      <td style="text-align:right;font-weight:700;color:#f87171;white-space:nowrap">−${BRL(d.valor)}</td>
+      <td style="white-space:nowrap">
+        <button class="act" onclick="abrirItem('despesa','${d.id}')">✏️</button>
+        <button class="act" onclick="delItem('despesa','${d.id}')">🗑️</button>
+      </td></tr>`).join('')
+    :'<tr><td colspan="5" style="text-align:center;color:#334155;padding:20px">Nenhuma despesa lançada.</td></tr>';
+}
+
+// ── GRÁFICOS ────────────────────────────────────────────────
+function rGraf(mon,tR,tD){
+  const cm=catMap(mon.despesas);
+  const ca=Object.entries(cm).sort((a,b)=>b[1]-a[1]);
+  dc('ch-donut');
+  if(ca.length)CHS['ch-donut']=new Chart(document.getElementById('ch-donut'),{
+    type:'doughnut',
+    data:{labels:ca.map(x=>x[0]),datasets:[{data:ca.map(x=>x[1]),backgroundColor:COR.map(c=>c+'99'),borderColor:COR,borderWidth:1.5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#64748b',font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.label}: ${BRL(c.raw)}`}}}}
+  });
+  dc('ch-res');
+  CHS['ch-res']=new Chart(document.getElementById('ch-res'),{
+    type:'bar',
+    data:{labels:['Receitas','Despesas','Saldo'],datasets:[{data:[tR,tD,Math.max(0,tR-tD)],backgroundColor:['#10b98166','#ef444466','#3b82f666'],borderColor:['#10b981','#ef4444','#3b82f6'],borderWidth:1.5,borderRadius:8,borderSkipped:false}]},
+    options:dkopts(true)
+  });
+  document.getElementById('det-cat').innerHTML=ca.length?ca.map((c,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="width:8px;height:8px;border-radius:2px;background:${COR[i%COR.length]};flex-shrink:0"></div>
+      <span style="flex:1;font-size:13px;color:#94a3b8">${c[0]}</span>
+      <span style="font-weight:700;font-size:13px">${BRL(c[1])}</span>
+      <span style="color:#475569;font-size:11px">${tD>0?((c[1]/tD)*100).toFixed(0):0}%</span>
+    </div>`).join(''):'<p style="color:#334155;text-align:center">Sem despesas.</p>';
+}
+
+// ── SIMULADOR ───────────────────────────────────────────────
+function sim(){
+  const a=+document.getElementById('s-ap').value||500;
+  const n=+document.getElementById('s-an').value||10;
+  const t=+document.getElementById('s-tx').value||12;
+  document.getElementById('sv-ap').textContent=BRL(a);
+  document.getElementById('sv-an').textContent=n+' anos';
+  document.getElementById('sv-tx').textContent=t+'%';
+  const r=t/100/12,nm=n*12;
+  const fin=Math.round(a*((Math.pow(1+r,nm)-1)/r));
+  const inv=a*nm;
+  document.getElementById('sv-inv').textContent=BRL(inv);
+  document.getElementById('sv-fin').textContent=BRL(fin);
+  document.getElementById('sv-rend').textContent=`Rendimento: ${BRL(fin-inv)} (+${((fin/inv-1)*100).toFixed(0)}%)`;
+  const pts=Array.from({length:n},(_,i)=>{const ni=(i+1)*12;return{a:'Ano '+(i+1),v:Math.round(a*((Math.pow(1+r,ni)-1)/r)),i:a*ni};});
+  dc('ch-sim');
+  CHS['ch-sim']=new Chart(document.getElementById('ch-sim'),{
+    type:'line',
+    data:{labels:pts.map(x=>x.a),datasets:[
+      {label:'Patrimônio',data:pts.map(x=>x.v),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.06)',fill:true,tension:.4,pointRadius:2},
+      {label:'Investido',data:pts.map(x=>x.i),borderColor:'#60a5fa',fill:false,tension:.4,pointRadius:2,borderDash:[4,4]}
+    ]},
+    options:dkopts(true,true)
+  });
+  const sc=[{l:'CDI',t:11},{l:'CDB 120%',t:13.2},{l:'IBOV',t:15}];
+  document.getElementById('sim-cards').innerHTML=sc.map((s,i)=>{
+    const r2=s.t/100/12,f2=Math.round(a*((Math.pow(1+r2,nm)-1)/r2));
+    const cs=['#3b82f6','#8b5cf6','#10b981'][i];
+    return`<div class="card" style="margin:0"><div class="card-body" style="padding:10px"><div style="font-size:9px;text-transform:uppercase;font-weight:700;color:${cs}">${s.l} ${s.t}%</div><div style="font-size:14px;font-weight:800;color:${cs};margin-top:4px">${BRL(f2)}</div></div></div>`;
+  }).join('');
+}
+
+// ── IA ──────────────────────────────────────────────────────
+async function askIA(){
+  const mon=getMon(mesAtual);
+  const tR=mon.receitas.reduce((a,x)=>a+x.valor,0);
+  const tD=mon.despesas.reduce((a,x)=>a+x.valor,0);
+  const cm=catMap(mon.despesas);
+  const txt=`Usuário: ${EU.nome}. Mês: ${mlbl(mesAtual)}. Receitas: ${BRL(tR)}. Despesas: ${BRL(tD)}. Saldo: ${BRL(tR-tD)}. Categorias: ${Object.entries(cm).map(([k,v])=>`${k}:${BRL(v)}`).join(', ')||'nenhuma'}.`;
+  const btn=document.getElementById('btn-ia');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> Analisando…';
+  document.getElementById('ia-resp').style.display='none';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,
+        system:'Consultor financeiro pessoal brasileiro. Dê 4 dicas práticas numeradas com emojis. Direto e objetivo. Responda em português.',
+        messages:[{role:'user',content:txt}]})});
+    const d=await res.json();
+    document.getElementById('ia-resp').textContent=d.content?.[0]?.text||'Sem resposta.';
+    document.getElementById('ia-resp').style.display='block';
+  }catch{
+    document.getElementById('ia-resp').textContent='Erro ao conectar.';
+    document.getElementById('ia-resp').style.display='block';
+  }
+  btn.disabled=false;btn.innerHTML='✨ Analisar com IA';
+}
+
+// ── MODAL ITEM ───────────────────────────────────────────────
+function abrirItem(type,id){
+  eType=type;eId=id||null;
+  const mon=getMon(mesAtual);
+  const arr=type==='receita'?mon.receitas:mon.despesas;
+  const it=id?arr.find(x=>String(x.id)===String(id)):null;
+  document.getElementById('m-title').textContent=(id?'Editar ':'Nova ')+(type==='receita'?'Receita':'Despesa');
+  const cats=type==='receita'?CATS_R:CATS_D;
+  const hj=new Date().toISOString().split('T')[0];
+  document.getElementById('m-body').innerHTML=`
+    <div class="row2" style="margin-bottom:12px">
+      <div><label class="lbl">Valor (R$)</label>
+        <input class="inp" type="number" id="f-v" step="0.01" min="0.01" placeholder="0,00" value="${it?it.valor:''}"/></div>
+      <div><label class="lbl">Categoria</label>
+        <select class="inp" id="f-c">${cats.map(c=>`<option${it?.categoria===c?' selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="fld"><label class="lbl">Descrição</label>
+      <input class="inp" id="f-d" placeholder="Ex: Salário maio" value="${it?it.desc:''}"/></div>
+    <div class="fld"><label class="lbl">Data</label>
+      <input class="inp" type="date" id="f-dt" value="${it?it.data:hj}"/></div>
+    <div style="display:flex;gap:16px;margin-bottom:16px">
+      <label class="chk-row"><input type="checkbox" id="f-r" ${it?.rec?'checked':''}/> Recorrente</label>
+      ${type==='despesa'?`<label class="chk-row"><input type="checkbox" id="f-p" ${it?.parc?'checked':''}/> Parcelado</label>`:''}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-gray btn-sm" onclick="fecharOv('ov-item')">Cancelar</button>
+      <button class="btn ${type==='receita'?'btn-green':'btn-red'} btn-sm" onclick="salvarItem()">✓ Salvar</button>
+    </div>`;
+  abrirOv('ov-item');
+}
+
+async function salvarItem(){
+  const valor=parseFloat(document.getElementById('f-v').value);
+  const categoria=document.getElementById('f-c').value;
+  const desc=(document.getElementById('f-d').value||'').trim();
+  const data=document.getElementById('f-dt').value;
+  const rec=document.getElementById('f-r').checked;
+  const parc=eType==='despesa'&&!!document.getElementById('f-p')?.checked;
+  if(!valor||isNaN(valor)||valor<=0){toast('Valor inválido.',false);return;}
+  if(!data){toast('Informe a data.',false);return;}
+  const cur=getMon(mesAtual);
+  const arr=eType==='receita'?cur.receitas:cur.despesas;
+  if(eId){
+    const i=arr.findIndex(x=>String(x.id)===String(eId));
+    if(i>=0)arr[i]={...arr[i],valor,categoria,desc,data,rec,parc};
+  }else{
+    arr.push({id:uid(),valor,categoria,desc,data,rec,parc});
+  }
+  setMon(mesAtual,cur);await saveF();fecharOv('ov-item');render();
+  toast(eId?'Atualizado!':'Salvo!');
+}
+
+function delItem(type,id){
+  document.getElementById('conf-msg').textContent='Excluir este lançamento? Ação irreversível.';
+  document.getElementById('conf-ok').onclick=async()=>{
+    const cur=getMon(mesAtual);
+    const arr=type==='receita'?cur.receitas:cur.despesas;
+    const i=arr.findIndex(x=>String(x.id)===String(id));
+    if(i>=0)arr.splice(i,1);
+    setMon(mesAtual,cur);await saveF();fecharOv('ov-conf');render();toast('Excluído.');
+  };
+  abrirOv('ov-conf');
+}
+
+// ── ADMIN USUÁRIOS ───────────────────────────────────────────
+function renderUsers(){
+  if(!document.getElementById('bloco-admin'))return;
+  const keys=Object.keys(USERS);
+  document.getElementById('tb-users').innerHTML=keys.map(u=>{
+    const usr=USERS[u];const adm=usr.role==='admin';
+    return`<tr>
+      <td><strong style="color:#e2e8f0">${usr.nome||u}</strong><br><small style="color:#475569">@${u}</small></td>
+      <td>${adm?'<span class="badge-adm">Admin</span>':'<span class="badge-usr">Usuário</span>'}</td>
+      <td>${usr.mustChange?'<span style="color:#fbbf24;font-size:11px">⚠️ Pendente</span>':'<span style="color:#4ade80;font-size:11px">✅ Ok</span>'}</td>
+      <td style="white-space:nowrap">
+        ${!adm?`<button class="act" onclick="delUser('${u}')">🗑️</button>`:''}
+        ${usr.mustChange&&!adm?`<button class="act" onclick="resetPw('${u}')">🔄</button>`:''}
+      </td></tr>`;
+  }).join('')||'<tr><td colspan="4" style="text-align:center;color:#334155;padding:20px">Nenhum usuário.</td></tr>';
+}
+function abrirNovoUser(){
+  document.getElementById('nu-l').value='';
+  document.getElementById('nu-n').value='';
+  err('nu-err','');abrirOv('ov-user');
+}
+async function salvarUser(){
+  const login=(document.getElementById('nu-l').value||'').trim().toLowerCase().replace(/\s+/g,'');
+  const nome=(document.getElementById('nu-n').value||'').trim();
+  err('nu-err','');
+  if(!login||login.length<3){err('nu-err','Login inválido (mín. 3 chars).');return;}
+  if(!nome){err('nu-err','Informe o nome completo.');return;}
+  if(USERS[login]){err('nu-err','Usuário já existe.');return;}
+  USERS[login]={nome,role:'user',hash:await H('123456'),mustChange:true,criado:new Date().toLocaleDateString('pt-BR')};
+  await saveU();fecharOv('ov-user');renderUsers();
+  toast(`@${login} criado! Senha: 123456`);
+}
+function delUser(u){
+  document.getElementById('conf-msg').textContent=`Excluir @${u} e todos os seus dados?`;
+  document.getElementById('conf-ok').onclick=async()=>{
+    delete USERS[u];if(FIN[u])delete FIN[u];
+    await saveU();await saveF();fecharOv('ov-conf');renderUsers();toast(`@${u} excluído.`);
+  };
+  abrirOv('ov-conf');
+}
+async function resetPw(u){
+  USERS[u].hash=await H('123456');USERS[u].mustChange=true;
+  await saveU();renderUsers();toast(`Senha de @${u} resetada.`);
+}
+
+// ── ALTERAR SENHA ────────────────────────────────────────────
+function alterarSenhaModal(){
+  document.getElementById('pw-a').value='';
+  document.getElementById('pw-n').value='';
+  document.getElementById('pw-c').value='';
+  err('pw-err','');abrirOv('ov-pw');
+}
+async function salvarSenha(){
+  const a=document.getElementById('pw-a').value||'';
+  const n=document.getElementById('pw-n').value||'';
+  const c=document.getElementById('pw-c').value||'';
+  err('pw-err','');
+  if(await H(a)!==USERS[EU.u].hash){err('pw-err','Senha atual incorreta.');return;}
+  if(n.length<6){err('pw-err','Mínimo 6 caracteres.');return;}
+  if(n==='123456'){err('pw-err','Não use a senha padrão.');return;}
+  if(n!==c){err('pw-err','Senhas não coincidem.');return;}
+  USERS[EU.u].hash=await H(n);await saveU();fecharOv('ov-pw');toast('Senha alterada!');
+}
+
+// ── EXPORTAR ────────────────────────────────────────────────
+function getExpKey(){return document.getElementById('exp-sel')?.value||mesAtual;}
+function expExcel(){
+  const k=getExpKey();const mon=getMon(k);
+  const tR=mon.receitas.reduce((a,x)=>a+x.valor,0);
+  const tD=mon.despesas.reduce((a,x)=>a+x.valor,0);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([
+    [`MeuFluxo — ${EU.nome} — ${mlbl(k)}`],[],
+    ['Receitas',tR],['Despesas',tD],['Saldo',tR-tD],['Investível',Math.max(0,(tR-tD)*.3)],[],
+    ['Categoria','Valor'],
+    ...Object.entries(catMap(mon.despesas)).sort((a,b)=>b[1]-a[1])
+  ]),'Resumo');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([
+    ['Descrição','Categoria','Data','Valor','Recorrente'],
+    ...mon.receitas.map(r=>[r.desc,r.categoria,r.data,r.valor,r.rec?'Sim':'Não'])
+  ]),'Receitas');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([
+    ['Descrição','Categoria','Data','Valor','Parcelado'],
+    ...mon.despesas.map(d=>[d.desc,d.categoria,d.data,d.valor,d.parc?'Sim':'Não'])
+  ]),'Despesas');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([
+    ['Tipo','Descrição','Categoria','Data','Valor'],
+    ...mon.receitas.map(r=>['Receita',r.desc,r.categoria,r.data,r.valor]),
+    ...mon.despesas.map(d=>['Despesa',d.desc,d.categoria,d.data,d.valor])
+  ]),'Dados_PowerBI');
+  XLSX.writeFile(wb,`MeuFluxo_${EU.u}_${k}.xlsx`);
+  toast('Excel gerado!');
+}
+function expHTML(){
+  const k=getExpKey();const mon=getMon(k);
+  const tR=mon.receitas.reduce((a,x)=>a+x.valor,0);
+  const tD=mon.despesas.reduce((a,x)=>a+x.valor,0);
+  const sl=tR-tD;
+  const h=saude(tR,tD,sl,mon.despesas);
+  const hc=h>=70?'#4ade80':h>=45?'#fbbf24':'#f87171';
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>MeuFluxo</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:sans-serif;background:#0f172a;color:#e2e8f0;padding:16px}.c{max-width:700px;margin:0 auto}.h{background:linear-gradient(135deg,#1e293b,#1d4ed8);border-radius:12px;padding:18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}.g{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}.k{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px}.kl{font-size:10px;color:#64748b;text-transform:uppercase;font-weight:700}.kv{font-size:16px;font-weight:800;margin-top:4px}table{width:100%;border-collapse:collapse;margin-bottom:16px}th{background:#162032;font-size:10px;color:#64748b;text-transform:uppercase;padding:7px 10px;border-bottom:1px solid #273344;text-align:left}td{padding:7px 10px;border-bottom:1px solid #1e293b;font-size:12px;color:#cbd5e1}.sec{font-size:12px;font-weight:700;margin:14px 0 7px;color:#94a3b8;text-transform:uppercase}</style></head><body><div class="c"><div class="h"><div><h1 style="font-size:18px;font-weight:800">📊 MeuFluxo</h1><p style="font-size:12px;opacity:.7;margin-top:3px">${EU.nome} — ${mlbl(k)}</p></div><div style="background:rgba(255,255,255,.08);border-radius:8px;padding:8px 12px;text-align:center"><div style="font-size:22px;font-weight:800;color:${hc}">${h}</div><div style="font-size:9px;color:${hc};text-transform:uppercase">${h>=70?'Saudável':h>=45?'Atenção':'Crítico'}</div></div></div><div class="g"><div class="k"><div class="kl">Receitas</div><div class="kv" style="color:#4ade80">${BRL(tR)}</div></div><div class="k"><div class="kl">Despesas</div><div class="kv" style="color:#f87171">${BRL(tD)}</div></div><div class="k"><div class="kl">Saldo</div><div class="kv" style="color:${sl>=0?'#60a5fa':'#f87171'}">${BRL(sl)}</div></div><div class="k"><div class="kl">Investível</div><div class="kv" style="color:#fbbf24">${BRL(Math.max(0,sl*.3))}</div></div></div><div class="sec">💰 Receitas</div><table><thead><tr><th>Descrição</th><th>Categoria</th><th>Data</th><th>Valor</th></tr></thead><tbody>${mon.receitas.map(r=>`<tr><td>${r.desc||'—'}</td><td>${r.categoria}</td><td>${r.data}</td><td style="color:#4ade80;font-weight:700">${BRL(r.valor)}</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#334155;padding:14px">Nenhuma receita.</td></tr>'}</tbody></table><div class="sec">💸 Despesas</div><table><thead><tr><th>Descrição</th><th>Categoria</th><th>Data</th><th>Valor</th></tr></thead><tbody>${mon.despesas.map(d=>`<tr><td>${d.desc||'—'}</td><td>${d.categoria}</td><td>${d.data}</td><td style="color:#f87171;font-weight:700">−${BRL(d.valor)}</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#334155;padding:14px">Nenhuma despesa.</td></tr>'}</tbody></table><p style="text-align:center;color:#334155;font-size:11px;margin-top:16px">Gerado pelo MeuFluxo · ${new Date().toLocaleDateString('pt-BR')}</p></div></body></html>`;
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([html],{type:'text/html'})),download:`MeuFluxo_${EU.u}_${k}.html`});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);toast('HTML baixado!');
+}
+function envWpp(){
+  const k=getExpKey();const mon=getMon(k);
+  const tR=mon.receitas.reduce((a,x)=>a+x.valor,0);
+  const tD=mon.despesas.reduce((a,x)=>a+x.valor,0);
+  const sl=tR-tD;
+  const ca=Object.entries(catMap(mon.despesas)).sort((a,b)=>b[1]-a[1]);
+  const txt=`📊 *MeuFluxo — ${EU.nome} — ${mlbl(k)}*\n\n💰 Receitas: *${BRL(tR)}*\n💸 Despesas: *${BRL(tD)}*\n🏦 Saldo: *${BRL(sl)}*\n\n📌 *Categorias:*\n${ca.slice(0,5).map((c,i)=>`${i+1}. ${c[0]}: ${BRL(c[1])}`).join('\n')}\n\n_MeuFluxo_`;
+  const num=(document.getElementById('wpp').value||'').replace(/\D/g,'');
+  window.open((num?`https://wa.me/55${num}?text=`:`https://wa.me/?text=`)+encodeURIComponent(txt),'_blank');
+}
+
+// ── INIT ────────────────────────────────────────────────────
+async function init(){
+  USERS=(await S.g('mf6-u'))||{};
+  FIN=(await S.g('mf6-f'))||{};
+  CFG=(await S.g('mf6-cfg'))||{};
+  if(!USERS['felipe']){
+    USERS['felipe']={nome:'Felipe',role:'admin',hash:await H('850416'),mustChange:false,criado:new Date().toLocaleDateString('pt-BR')};
+    await saveU();
+  }
+  tela('tela-login');
+}
+init();
+</script>
+</body>
+</html>
